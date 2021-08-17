@@ -31,3 +31,5 @@ class UserEditView(UpdateView):
 class UserDetailView(DetailView):
     model = User
     template_name = 'users/user_detail.html'
+
+

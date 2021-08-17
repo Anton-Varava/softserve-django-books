@@ -13,8 +13,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import debug_toolbar
 from django.contrib import admin
-from django.urls import path
 from django.urls import path, include
 
 from users.views import UserCreateView
@@ -23,6 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('sign_up', UserCreateView.as_view(), name='sign-up'),
     path('users/', include(('users.urls', 'users'))),
-    path('books/', include(('books.urls', 'books')))
+    path('books/', include(('books.urls', 'books'))),
+    path('authors/', include(('authors.urls', 'authors'))),
+    path('__debug__/', include(debug_toolbar.urls)),
 
 ]

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<ul>
+    {% for book in books %}
+    <li><a href="{% url 'books:detail-book' book.id %}">{{ book }}</a></li>
+    {% endfor %}
+</ul>
+
+{% include 'pagination.html'%}
+
+{% endblock %}
