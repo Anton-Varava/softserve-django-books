@@ -12,4 +12,14 @@
     </div>
 </div>
 <a class="button button-secondary" href="{% url 'books:edit-book' book.id %}">Edit</a>
+<h2>Reviews...</h2>
+{% if book.reviews.all %}
+{% for review in book.reviews.all %}
+<strong>{{ review.user.username }} {{ review.date_added }}</strong>
+<p>{{ review.body }}</p>
+{% endfor %}
+{% else %}
+<p>...No reviews yet...</p>
+{% endif %}
+
 {% endblock %}

@@ -15,13 +15,16 @@ Including another URLconf
 """
 import debug_toolbar
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import path, include
 
-from users.views import UserCreateView
+from users import views as user_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('sign_up', UserCreateView.as_view(), name='sign-up'),
+    path('sign_up', user_views.UserCreateView.as_view(), name='sign-up'),
+    path('sign_in', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
+    path('sign_out', auth_views.LogoutView.as_view(), name='sign-out'),
     path('users/', include(('users.urls', 'users'))),
     path('books/', include(('books.urls', 'books'))),
     path('authors/', include(('authors.urls', 'authors'))),

@@ -7,7 +7,7 @@
 {% if search_query %}<h2>Searching for "<b>{{ search_query }}</b>"</h2>{% endif %}
 <ul>
     {% for author in authors %}
-    <li><a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a></li>
+    <li><a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a> {% if author.books.all %}({{ author.books.all|length }} books){% endif %}</li>
     {% endfor %}
 </ul>
 {% include 'pagination.html'%}

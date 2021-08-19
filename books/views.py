@@ -4,7 +4,7 @@ from django.views.generic import CreateView, ListView, UpdateView, DetailView
 from django.db.models import Q
 
 from .models import Book, BookReview, ReviewComment
-from .forms import BookUpdateForm, BookCreateForm
+from .forms import BookUpdateForm, BookCreateForm, BookReviewCreateForm
 
 
 # Create your views here.
@@ -31,7 +31,6 @@ class BookListView(ListView):
 
 class BookDetailView(DetailView):
     model = Book
-    prefetch_related = ['authors']
     context_object_name = 'book'
 
 
@@ -53,6 +52,19 @@ class BookCreateView(CreateView):
 
     def get_success_url(self):
         return reverse('books:detail-book', args=(self.object.id, ))
+
+
+class BookReviewListView(ListView):
+    model = BookReview
+    context_object_name = 'reviews'
+
+
+class BookReviewCreateView(CreateView):
+    model = BookReview
+    form_class = BookReviewCreateForm
+
+
+
 
 
 

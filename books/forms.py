@@ -15,7 +15,7 @@ class BookUpdateForm(forms.ModelForm):
         fields = ['title', 'isbn13', 'description', 'authors']
 
 
-# class BookReviewCreateForm(forms.ModelForm):
-#     class Meta:
-#         model = Book
-#         fields = ['text']
+class BookReviewCreateForm(forms.ModelForm):
+    class Meta:
+        model = BookReview
+        fields = ['body']
