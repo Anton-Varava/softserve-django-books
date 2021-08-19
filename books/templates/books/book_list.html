@@ -1,9 +1,16 @@
 {% extends 'base.html' %}
 {% block content %}
-
+<form class="d-flex" action="{% url 'books:search-books'%}" method="get">
+    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search book" name="book-search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+{% if book_search %}<h2>Searching for "<b>{{ book_search }}</b>"</h2>{% endif %}
 <ul>
     {% for book in books %}
-    <li><a href="{% url 'books:detail-book' book.id %}">{{ book }}</a></li>
+    <li>
+        <a href="{% url 'books:detail-book' book.id %}">{{ book.title }}</a>
+        <p>Authors: {% for author in book.authors.all%}<a href="{% url 'authors:detail-author' author.id%}">{{ author }}</a> {% endfor %}</p>
+    </li>
     {% endfor %}
 </ul>
 

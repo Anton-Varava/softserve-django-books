@@ -2,10 +2,14 @@
 {% block content %}
 
 <div class="row">
-    <h2>{{ book.title }}</h2>
-    <p>{{ book.isbn13 }}</p>
-    {% if book.description %}
-        <div>{{ book.description | safe }}</div>
-    {% endif %}
+    <div class="content-section col-md-8 mx-auto">
+        <h2>{{ book.title }}</h2>
+        <p>{% for author in book.authors.all %}<a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a> {% endfor %}</p>
+        <p>{{ book.isbn13 }}</p>
+        {% if book.description %}
+            <div>{{ book.description | safe }}</div>
+        {% endif %}
+    </div>
 </div>
+<a class="button button-secondary" href="{% url 'books:edit-book' book.id %}">Edit</a>
 {% endblock %}

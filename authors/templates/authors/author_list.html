@@ -1,10 +1,15 @@
 {% extends 'base.html' %}
 {% block content %}
-
+<form class="d-flex" action="{% url 'authors:search-authors'%}" method="get">
+    <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search book" name="authors-search">
+    <button class="btn btn-outline-success" type="submit">Search</button>
+</form>
+{% if search_query %}<h2>Searching for "<b>{{ search_query }}</b>"</h2>{% endif %}
 <ul>
     {% for author in authors %}
-    <li><a href="{% url 'authors:detail-authors' author.id %}">{{ author }}</a></li>
+    <li><a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a></li>
     {% endfor %}
 </ul>
+{% include 'pagination.html'%}
 
 {% endblock %}
