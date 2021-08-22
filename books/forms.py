@@ -19,3 +19,24 @@ class BookReviewCreateForm(forms.ModelForm):
     class Meta:
         model = BookReview
         fields = ['body']
+
+
+class BookReviewUpdateForm(forms.ModelForm):
+    class Meta:
+        model = BookReview
+        fields = ['body']
+
+
+class ReviewCommentCreateForm(forms.ModelForm):
+    class Meta:
+        model = ReviewComment
+        fields = ['body']
+
+
+class ReviewCommentUpdateForm(forms.ModelForm):
+    class Meta:
+        model = ReviewComment
+        fields = ['body']
+
+
+

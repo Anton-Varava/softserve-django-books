@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load crispy_forms_tags %}
+<div class="row">
+    <a href="{% url 'books:edit-review' book_id=book_id  pk=review_id %}"><- Back to edit review</a>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <fieldset class="form-group">
+            <legend class="border-bottom mb-4">Delete Review</legend>
+            <h2>Are you sure you want to delete this review?</h2>
+        </fieldset>
+        <div class="form-group">
+            <button type="submit" class="btn btn-danger">Delete</button>
+            <a class="btn btn-outline-secondary" href="{% url 'books:detail-book' book_id %}">Cancel</a>
+        </div>
+
+    </form>
+
+</div>
+
+
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load crispy_forms_tags %}
+
+<form method="post" action="">
+    <fieldset class="form-group">
+        <legend class="border-bottom mb-4">Edit Comment</legend>
+    </fieldset>
+    {% csrf_token %}
+    {{ form|crispy }}
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Edit</button>
+        <a class="btn btn-outline-secondary" href="{% url 'books:detail-book' book_id %}">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

@@ -8,3 +8,18 @@
 .navbar {
   margin-bottom: 20px;
 }
+.review-section {
+  background: oldlace;
+  padding: 10px 20px;
+  border: 1px solid #dddddd;
+  border-radius: 3px;
+  margin: 5px;
+}
+.comment-section {
+  text-align: right;
+  background: lightblue;
+  padding: 10px 20px;
+  border: 1px solid #dddddd;
+  border-radius: 15px;
+  margin-bottom: 5px;
+}
