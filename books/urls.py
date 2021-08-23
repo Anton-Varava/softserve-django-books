@@ -13,6 +13,8 @@ urlpatterns = [
     path('<int:book_id>/review-edit/<int:pk>', views.BookReviewUpdateView.as_view(), name='edit-review'),
     path('<int:book_id>/review-delete/<int:pk>', views.BookReviewDeleteView.as_view(), name='delete-review'),
     path('<int:book_id>/<int:review_id>/comment_add', views.CommentReviewCreateView.as_view(), name='add-comment'),
+    path('<int:book_id>/<int:review_id>/reply_comment_add/<int:reply_id>', views.CommentReviewCreateView.as_view(),
+         name='add-reply-comment'),
     path('<int:book_id>/comment_edit/<int:pk>', views.CommentUpdateView.as_view(), name='edit-comment'),
     path('<int:book_id>/comment_delete/<int:pk>', views.CommentDeleteView.as_view(), name='delete-comment'),
 

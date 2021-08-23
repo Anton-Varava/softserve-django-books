@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -123,7 +124,6 @@ class BookReviewUpdateView(LoginRequiredMixin, UpdateView):
         context = super(BookReviewUpdateView, self).get_context_data(**kwargs)
         context['book'] = Book.objects.get(id=self.kwargs['book_id'])
         context['review_id'] = self.kwargs['pk']
-
         return context
 
     def get_object(self, queryset=None):
@@ -139,17 +139,33 @@ class BookReviewUpdateView(LoginRequiredMixin, UpdateView):
 
 # <-------   Views for ReviewComment model ------>
 class CommentReviewCreateView(LoginRequiredMixin, CreateView):
+    model = ReviewComment
+    form_class = ReviewCommentCreateForm
+
+    def get_initial(self):
+        initial = super(CommentReviewCreateView, self).get_initial()
+        if self.kwargs['reply_id']:
+            parent_comment = get_object_or_404(ReviewComment, id=self.kwargs['reply_id'])
+            initial['body'] = f'<q>{parent_comment.body}</q><br/>'
+        return initial
 
     def post(self, request, *args, **kwargs):
         form = ReviewCommentCreateForm(request.POST)
         user = self.request.user
-        review = BookReview.objects.get(id=int(self.kwargs['review_id']))
+        review = BookReview.objects.get(id=self.kwargs['review_id'])
         if form.is_valid():
             form = form.save(commit=False)
             form.user = user
             form.review = review
             form.save()
         return redirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super(CommentReviewCreateView, self).get_context_data(**kwargs)
+        context['book_id'] = self.kwargs['book_id']
+        if self.kwargs['reply_id']:
+            context['reply_body'] = ReviewComment.objects.get(id=self.kwargs['reply_id'])
+        return context
 
     def get_success_url(self):
         pk = self.kwargs['book_id']
@@ -168,6 +184,7 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(CommentUpdateView, self).get_context_data(**kwargs)
+        context['comment_id'] = self.kwargs['pk']
         context['book_id'] = self.kwargs['book_id']
         return context
 
