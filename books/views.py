@@ -4,11 +4,10 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from .models import Book, BookReview, ReviewComment
-from .forms import BookUpdateForm, BookCreateForm, BookReviewCreateForm, ReviewCommentCreateForm, \
-    ReviewCommentUpdateForm, BookReviewUpdateForm
+from .forms import BookForm, ReviewCommentForm, BookReviewForm
 
 
 # <-------   Views for Book model ------>
@@ -43,11 +42,10 @@ class BookDetailView(DetailView):
         return context
 
 
-class BookUpdateView(LoginRequiredMixin, UpdateView):
+class BookUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = 'books.change_book'
     model = Book
-    form_class = BookUpdateForm
-    success_message = 'Book updated successfully.'
-    template_name = 'books/book_form.html'
+    form_class = BookForm
     context_object_name = 'book'
 
     def get_success_url(self):
@@ -55,13 +53,21 @@ class BookUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('books:detail-book', kwargs={'pk': pk})
 
 
-class BookCreateView(LoginRequiredMixin, CreateView):
+class BookCreateView(PermissionRequiredMixin, CreateView):
+    permission_required = 'books.add_book'
     model = Book
-    form_class = BookCreateForm
+    form_class = BookForm
 
     def get_success_url(self):
         return reverse('books:detail-book', args=(self.object.id, ))
 
+
+class BookDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = 'books.delete_book'
+    model = Book
+
+    def get_success_url(self):
+        return reverse('books:list-book')
 
 # <-------   Views for BookReview model ------>
 class BookReviewListView(ListView):
@@ -69,12 +75,13 @@ class BookReviewListView(ListView):
     context_object_name = 'reviews'
 
 
-class BookReviewCreateView(LoginRequiredMixin, CreateView):
+class BookReviewCreateView(PermissionRequiredMixin, CreateView):
+    permission_required = 'books.add_bookreview'
     model = BookReview
-    form_class = BookReviewCreateForm
+    form_class = BookReviewForm
 
     def post(self, request, *args, **kwargs):
-        form = BookReviewCreateForm(request.POST)
+        form = BookReviewForm(request.POST)
         user = self.request.user
         book = Book.objects.get(id=self.kwargs['book_id'])
 
@@ -96,7 +103,8 @@ class BookReviewCreateView(LoginRequiredMixin, CreateView):
         return reverse('books:detail-book', kwargs={'pk': pk})
 
 
-class BookReviewDeleteView(LoginRequiredMixin, DeleteView):
+class BookReviewDeleteView(PermissionRequiredMixin, DeleteView):
+    permission_required = 'books.delete_bookreview'
     model = BookReview
 
     def get_object(self, queryset=None):
@@ -116,9 +124,10 @@ class BookReviewDeleteView(LoginRequiredMixin, DeleteView):
         return context
 
 
-class BookReviewUpdateView(LoginRequiredMixin, UpdateView):
+class BookReviewUpdateView(PermissionRequiredMixin, UpdateView):
+    permission_required = 'books.edit_bookreview'
     model = BookReview
-    form_class = BookReviewUpdateForm
+    form_class = BookReviewForm
 
     def get_context_data(self, **kwargs):
         context = super(BookReviewUpdateView, self).get_context_data(**kwargs)
@@ -140,7 +149,7 @@ class BookReviewUpdateView(LoginRequiredMixin, UpdateView):
 # <-------   Views for ReviewComment model ------>
 class CommentReviewCreateView(LoginRequiredMixin, CreateView):
     model = ReviewComment
-    form_class = ReviewCommentCreateForm
+    form_class = ReviewCommentForm
 
     def get_initial(self):
         initial = super(CommentReviewCreateView, self).get_initial()
@@ -150,7 +159,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def post(self, request, *args, **kwargs):
-        form = ReviewCommentCreateForm(request.POST)
+        form = ReviewCommentForm(request.POST)
         user = self.request.user
         review = BookReview.objects.get(id=self.kwargs['review_id'])
         if form.is_valid():
@@ -174,7 +183,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
 
 class CommentUpdateView(LoginRequiredMixin, UpdateView):
     model = ReviewComment
-    form_class = ReviewCommentUpdateForm
+    form_class = ReviewCommentForm
 
     def get_object(self, queryset=None):
         obj = super(CommentUpdateView, self).get_object(queryset)
@@ -211,14 +220,3 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
     def get_success_url(self):
         pk = self.kwargs['book_id']
         return reverse('books:detail-book', kwargs={'pk': pk})
-        
-
-
-
-
-
-
-
-
-
-
