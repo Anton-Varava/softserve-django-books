@@ -1,0 +1,19 @@
+{% if reviews %}
+    {% for review in reviews %}
+    <div class="review-section">
+        <strong>{{ review.user.username }} {{ review.date_added }}</strong>
+        <p>{{ review.body | safe }}</p>
+        {% if review.user == request.user or request.user.is_staff %}
+        <a href="{% url 'books:edit-review' book_id=book.id pk=review.id %}">Edit</a>
+        {% endif %}
+        <a href="{% url 'books:add-comment' book_id=book.id review_id=review.id %}">Add Comment</a>
+    </div>
+
+    {% include 'books/comments_list.html' %}
+
+    {% endfor %}
+{% else %}
+    <div class="row" style="text-align:center">
+        <p>...No reviews yet...</p>
+    </div>
+{% endif %}

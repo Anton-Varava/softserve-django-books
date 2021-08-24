@@ -1,17 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
+{% load custom_tags %}
 
 <div class="row">
-    <div class="content-section col-md-8 mx-auto">
+    <div class="content-section col-md-10 mx-auto">
         <h2>{{ book.title }}</h2>
         <p>{% for author in book.authors.all %}<a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a> {% endfor %}</p>
         <p>{{ book.isbn13 }}</p>
-        {% if book.description %}
-            <div>{{ book.description | safe }}</div>
-        {% endif %}
+        <div>{{ book.description | safe }}</div>
     </div>
+    {% if request.user.is_staff or request.user|has_group:"Authors" %}
+    <div class="sidebar-section col-md-2">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'books:create-book'%}">Add new book</a>
+            </li>
+            {% if request.user.is_staff or book.author.user == request.user %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'books:edit-book' book.id %}">Edit book</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'books:delete-book' book.id %}">Delete book</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#">Edit book</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" href="#">Delete book</a>
+            </li>
+            {% endif %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'books:add-review' book.id %}">Add review</a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
 </div>
-<a class="button button-secondary" href="{% url 'books:edit-book' book.id %}">Edit</a>
 <h2>Reviews...</h2>
 <br/>
 {% if user.is_authenticated %}
@@ -20,45 +45,6 @@
     <a href="{% url 'sign-in' %}?next={% url 'books:add-review' book.id %}">Add new review</a>
 {% endif %}
 <br/>
-{% if reviews %}
-    {% for review in reviews %}
-    <div class="review-section">
-        <strong>{{ review.user.username }} {{ review.date_added }}</strong>
-        <p>{{ review.body }}</p>
-        {% if review.user == request.user %}
-        <a href="{% url 'books:edit-review' book_id=book.id pk=review.id %}">Edit</a>
-        {% endif %}
-        <a href="{% url 'books:add-comment' book_id=book.id review_id=review.id %}">Add Comment</a>
-    </div>
-    {% for comment in review.comments.all %}
-    <div class="row">
-        <div class="col-md-6">
-        </div>
-        <div class="comment-section col-md-6 ">
-            <strong>{{ comment.user.username }} {{ comment.date_added }}</strong>
-            <p>{{ comment.body|safe }}</p>
-            {% if comment.user == request.user %}
-
-            <a href="{% url 'books:edit-comment' book_id=book.id pk=comment.id %}">Edit</a>
-            <a href="{% url 'books:delete-comment' book_id=book.id pk=comment.id %}">Delete</a>
-            {% endif %}
-            <a href="{% url 'books:add-reply-comment' book_id=book.id review_id=review.id reply_id=comment.id %}">Reply</a>
-
-        </div>
-    </div>
-    {% endfor %}
-
-    <form method="post" action="{% url 'books:add-comment' book_id=book.id review_id=review.id %}">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="">Enter your comment</label>
-            <textarea class="form-control" rows="3" name="body"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-    {% endfor %}
-{% else %}
-    <p>...No reviews yet...</p>
-{% endif %}
+{% include 'books/reviews_list.html' %}
 
 {% endblock %}

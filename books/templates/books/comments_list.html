@@ -1,0 +1,26 @@
+{% for comment in review.comments.all %}
+<div class="row">
+    <div class="col-md-6">
+    </div>
+    <div class="comment-section col-md-6 ">
+        <strong>{{ comment.user.username }} {{ comment.date_added }}</strong>
+        <p>{{ comment.body|safe }}</p>
+        {% if comment.user == request.user or request.user.is_staff %}
+
+        <a href="{% url 'books:edit-comment' book_id=book.id pk=comment.id %}">Edit</a>
+        <a href="{% url 'books:delete-comment' book_id=book.id pk=comment.id %}">Delete</a>
+        {% endif %}
+        <a href="{% url 'books:add-reply-comment' book_id=book.id review_id=review.id reply_id=comment.id %}">Reply</a>
+
+    </div>
+</div>
+{% endfor %}
+
+<form method="post" action="{% url 'books:add-comment' book_id=book.id review_id=review.id %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="">Enter your comment</label>
+        <textarea class="form-control" rows="3" name="body"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>

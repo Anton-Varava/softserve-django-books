@@ -8,6 +8,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 
 from .models import Book, BookReview, ReviewComment
 from .forms import BookForm, ReviewCommentForm, BookReviewForm
+from .utils import IsAuthorOrStaffMixin, IsOwnerOrStaff
 
 
 # <-------   Views for Book model ------>
@@ -42,7 +43,7 @@ class BookDetailView(DetailView):
         return context
 
 
-class BookUpdateView(PermissionRequiredMixin, UpdateView):
+class BookUpdateView(PermissionRequiredMixin, IsAuthorOrStaffMixin, UpdateView):
     permission_required = 'books.change_book'
     model = Book
     form_class = BookForm
@@ -51,6 +52,12 @@ class BookUpdateView(PermissionRequiredMixin, UpdateView):
     def get_success_url(self):
         pk = self.kwargs['pk']
         return reverse('books:detail-book', kwargs={'pk': pk})
+
+    # def get_object(self, queryset=None):
+    #     obj = super(BookUpdateView, self).get_object(queryset)
+    #     if self.request.user in obj.authors.all() or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
 
 
 class BookCreateView(PermissionRequiredMixin, CreateView):
@@ -62,12 +69,24 @@ class BookCreateView(PermissionRequiredMixin, CreateView):
         return reverse('books:detail-book', args=(self.object.id, ))
 
 
-class BookDeleteView(PermissionRequiredMixin, DeleteView):
+class BookDeleteView(PermissionRequiredMixin, IsAuthorOrStaffMixin, DeleteView):
     permission_required = 'books.delete_book'
     model = Book
 
     def get_success_url(self):
         return reverse('books:list-book')
+
+    # def get_object(self, queryset=None):
+    #     obj = super(BookDeleteView, self).get_object(queryset)
+    #     if self.request.user in obj.authors.all() or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
+
+    def get_context_data(self, **kwargs):
+        context = super(BookDeleteView, self).get_context_data(**kwargs)
+        context['book'] = Book.objects.get(id=self.kwargs['pk'])
+        return context
+
 
 # <-------   Views for BookReview model ------>
 class BookReviewListView(ListView):
@@ -86,10 +105,12 @@ class BookReviewCreateView(PermissionRequiredMixin, CreateView):
         book = Book.objects.get(id=self.kwargs['book_id'])
 
         if form.is_valid():
+            print('i am in form.is_valid')
             form = form.save(commit=False)
             form.user = user
             form.book = book
             form.save()
+            print(form)
         return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
@@ -103,15 +124,15 @@ class BookReviewCreateView(PermissionRequiredMixin, CreateView):
         return reverse('books:detail-book', kwargs={'pk': pk})
 
 
-class BookReviewDeleteView(PermissionRequiredMixin, DeleteView):
+class BookReviewDeleteView(PermissionRequiredMixin, IsOwnerOrStaff, DeleteView):
     permission_required = 'books.delete_bookreview'
     model = BookReview
 
-    def get_object(self, queryset=None):
-        obj = super(BookReviewDeleteView, self).get_object(queryset)
-        if obj.user != self.request.user:
-            raise PermissionDenied
-        return obj
+    # def get_object(self, queryset=None):
+    #     obj = super(BookReviewDeleteView, self).get_object(queryset)
+    #     if obj.user == self.request.user or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
 
     def get_success_url(self):
         pk = self.kwargs['book_id']
@@ -124,8 +145,8 @@ class BookReviewDeleteView(PermissionRequiredMixin, DeleteView):
         return context
 
 
-class BookReviewUpdateView(PermissionRequiredMixin, UpdateView):
-    permission_required = 'books.edit_bookreview'
+class BookReviewUpdateView(PermissionRequiredMixin, IsOwnerOrStaff, UpdateView):
+    permission_required = 'books.change_bookreview'
     model = BookReview
     form_class = BookReviewForm
 
@@ -135,11 +156,11 @@ class BookReviewUpdateView(PermissionRequiredMixin, UpdateView):
         context['review_id'] = self.kwargs['pk']
         return context
 
-    def get_object(self, queryset=None):
-        obj = super(BookReviewUpdateView, self).get_object(queryset)
-        if obj.user != self.request.user:
-            raise PermissionDenied
-        return obj
+    # def get_object(self, queryset=None):
+    #     obj = super(BookReviewUpdateView, self).get_object(queryset)
+    #     if obj.user == self.request.user or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
 
     def get_success_url(self):
         pk = self.kwargs['book_id']
@@ -153,7 +174,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
 
     def get_initial(self):
         initial = super(CommentReviewCreateView, self).get_initial()
-        if self.kwargs['reply_id']:
+        if 'reply_id' in self.kwargs:
             parent_comment = get_object_or_404(ReviewComment, id=self.kwargs['reply_id'])
             initial['body'] = f'<q>{parent_comment.body}</q><br/>'
         return initial
@@ -172,7 +193,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super(CommentReviewCreateView, self).get_context_data(**kwargs)
         context['book_id'] = self.kwargs['book_id']
-        if self.kwargs['reply_id']:
+        if 'reply_id' in self.kwargs:
             context['reply_body'] = ReviewComment.objects.get(id=self.kwargs['reply_id'])
         return context
 
@@ -181,15 +202,15 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
         return reverse('books:detail-book', kwargs={'pk': pk})
 
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
+class CommentUpdateView(LoginRequiredMixin, IsOwnerOrStaff, UpdateView):
     model = ReviewComment
     form_class = ReviewCommentForm
 
-    def get_object(self, queryset=None):
-        obj = super(CommentUpdateView, self).get_object(queryset)
-        if obj.user != self.request.user:
-            raise PermissionDenied
-        return obj
+    # def get_object(self, queryset=None):
+    #     obj = super(CommentUpdateView, self).get_object(queryset)
+    #     if obj.user == self.request.user or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
 
     def get_context_data(self, **kwargs):
         context = super(CommentUpdateView, self).get_context_data(**kwargs)
@@ -202,7 +223,7 @@ class CommentUpdateView(LoginRequiredMixin, UpdateView):
         return reverse('books:detail-book', kwargs={'pk': pk})
 
 
-class CommentDeleteView(LoginRequiredMixin, DeleteView):
+class CommentDeleteView(LoginRequiredMixin, IsOwnerOrStaff, DeleteView):
     model = ReviewComment
 
     def get_context_data(self, **kwargs):
@@ -211,11 +232,11 @@ class CommentDeleteView(LoginRequiredMixin, DeleteView):
         context['book_id'] = self.kwargs['book_id']
         return context
 
-    def get_object(self, queryset=None):
-        obj = super(CommentDeleteView, self).get_object(queryset)
-        if obj.user != self.request.user:
-            raise PermissionDenied
-        return obj
+    # def get_object(self, queryset=None):
+    #     obj = super(CommentDeleteView, self).get_object(queryset)
+    #     if obj.user == self.request.user or self.request.user.is_staff:
+    #         return obj
+    #     raise PermissionDenied
 
     def get_success_url(self):
         pk = self.kwargs['book_id']
