@@ -28,6 +28,7 @@ urlpatterns = [
     path('users/', include(('users.urls', 'users'))),
     path('books/', include(('books.urls', 'books'))),
     path('authors/', include(('authors.urls', 'authors'))),
+    path('api/', include(('authentication.urls', 'authentication'))),
     path('__debug__/', include(debug_toolbar.urls)),
 
 ]
