@@ -39,7 +39,8 @@ class BookDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(BookDetailView, self).get_context_data(**kwargs)
-        context['reviews'] = BookReview.objects.filter(book=self.kwargs['pk']).select_related('user').prefetch_related('comments')
+        context['reviews'] = BookReview.objects.filter(book=self.kwargs['pk']).select_related('user')\
+            .order_by('date_added').prefetch_related('comments', 'comments__user')
         return context
 
 
@@ -77,11 +78,6 @@ class BookDeleteView(PermissionRequiredMixin, IsAuthorOrStaffMixin, DeleteView):
 
 
 # <-------   Views for BookReview model ------>
-class BookReviewListView(ListView):
-    model = BookReview
-    context_object_name = 'reviews'
-
-
 class BookReviewCreateView(PermissionRequiredMixin, CreateView):
     permission_required = 'books.add_bookreview'
     model = BookReview

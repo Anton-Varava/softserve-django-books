@@ -7,8 +7,9 @@
 		<h1>{{ user.username }} Profile</h1>
 		<p>Full name: {{user.get_full_name}}</p>
 		<p>Email: {{ user.email }}</p>
-		<p>Groups:</p>
+		{% if request.user == user %}
 		<a class="button btn-secondary" href="{% url 'users:edit-user' user.id %}">Edit</a>
+		{% endif %}
 	</div>
 
 
