@@ -28,8 +28,9 @@ class BookListView(ListView):
         return queryset
 
     def get_context_data(self, *args, **kwargs):
+        """ Add search_query to context for using in template. """
         context = super().get_context_data(**kwargs)
-        context['book_search'] = self.request.GET.get('book-search')
+        context['search_query'] = self.request.GET.get('book-search')
         return context
 
 
@@ -38,6 +39,7 @@ class BookDetailView(DetailView):
     queryset = Book.objects.prefetch_related('authors')
 
     def get_context_data(self, **kwargs):
+        """ Add book reviews data to context with related comments. """
         context = super(BookDetailView, self).get_context_data(**kwargs)
         context['reviews'] = BookReview.objects.filter(book=self.kwargs['pk']).select_related('user')\
             .order_by('date_added').prefetch_related('comments', 'comments__user')
@@ -51,6 +53,7 @@ class BookUpdateView(PermissionRequiredMixin, IsAuthorOrStaffMixin, UpdateView):
     context_object_name = 'book'
 
     def get_success_url(self):
+        """ Return to the updated book details. """
         pk = self.kwargs['pk']
         return reverse('books:detail-book', kwargs={'pk': pk})
 
@@ -61,6 +64,7 @@ class BookCreateView(PermissionRequiredMixin, CreateView):
     form_class = BookForm
 
     def get_success_url(self):
+        """ Return to the created book details. """
         return reverse('books:detail-book', args=(self.object.id, ))
 
 
@@ -72,6 +76,7 @@ class BookDeleteView(PermissionRequiredMixin, IsAuthorOrStaffMixin, DeleteView):
         return reverse('books:list-book')
 
     def get_context_data(self, **kwargs):
+        """ Add book data to context for using it in a template. """
         context = super(BookDeleteView, self).get_context_data(**kwargs)
         context['book'] = Book.objects.get(id=self.kwargs['pk'])
         return context
@@ -84,26 +89,27 @@ class BookReviewCreateView(PermissionRequiredMixin, CreateView):
     form_class = BookReviewForm
 
     def post(self, request, *args, **kwargs):
+        """ Add current user and book instance to form data before saving. """
         form = BookReviewForm(request.POST)
         user = self.request.user
         book = Book.objects.get(id=self.kwargs['book_id'])
 
         if form.is_valid():
-            print('i am in form.is_valid')
             form = form.save(commit=False)
             form.user = user
             form.book = book
             form.save()
-            print(form)
         return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
+        """ Add book data to context for using it in a template. """
         context = super(BookReviewCreateView, self).get_context_data(**kwargs)
         context['book'] = Book.objects.get(id=self.kwargs['book_id'])
 
         return context
 
     def get_success_url(self):
+        """ Return to the book details. """
         pk = self.kwargs['book_id']
         return reverse('books:detail-book', kwargs={'pk': pk})
 
@@ -145,6 +151,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
     form_class = ReviewCommentForm
 
     def get_initial(self):
+        """ Pre-populating form if it's a reply. """
         initial = super(CommentReviewCreateView, self).get_initial()
         if 'reply_id' in self.kwargs:
             parent_comment = get_object_or_404(ReviewComment, id=self.kwargs['reply_id'])
@@ -152,12 +159,12 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
         return initial
 
     def post(self, request, *args, **kwargs):
+        """ Add current user and review instance to form data before saving. """
         form = ReviewCommentForm(request.POST)
-        user = self.request.user
         review = BookReview.objects.get(id=self.kwargs['review_id'])
         if form.is_valid():
             form = form.save(commit=False)
-            form.user = user
+            form.user = self.request.user
             form.review = review
             form.save()
         return redirect(self.get_success_url())
@@ -165,8 +172,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super(CommentReviewCreateView, self).get_context_data(**kwargs)
         context['book_id'] = self.kwargs['book_id']
-        if 'reply_id' in self.kwargs:
-            context['reply_body'] = ReviewComment.objects.get(id=self.kwargs['reply_id'])
+
         return context
 
     def get_success_url(self):

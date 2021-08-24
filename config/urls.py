@@ -17,11 +17,15 @@ import debug_toolbar
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import path, include
+from django.shortcuts import redirect
+from django.http import HttpResponseRedirect
+from django.views.generic.base import RedirectView
 
 from users import views as user_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', RedirectView.as_view(url='books/'), name='home-page'),
     path('sign_up', user_views.UserCreateView.as_view(), name='sign-up'),
     path('sign_in', auth_views.LoginView.as_view(template_name='users/sign_in.html'), name='sign-in'),
     path('sign_out', auth_views.LogoutView.as_view(), name='sign-out'),

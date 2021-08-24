@@ -1,9 +1,9 @@
 from django.core.exceptions import PermissionDenied
 
 
-class IsAuthorOrStaffMixin(object):
+class IsAuthorOrStaffMixin:
     """
-    Return object if user is author owner or is_staff
+    Return object if user is author owner or is_staff.
     """
     def get_object(self, queryset=None):
         obj = super(IsAuthorOrStaffMixin, self).get_object(queryset)
@@ -12,10 +12,10 @@ class IsAuthorOrStaffMixin(object):
         raise PermissionDenied
 
 
-class IsOwnerOrStaff(object):
+class IsOwnerOrStaff:
     """
-        Return object if user is owner or is_staff
-        """
+    Return object if user is owner or is_staff.
+    """
     def get_object(self, queryset=None):
         obj = super(IsOwnerOrStaff, self).get_object(queryset)
         if self.request.user == obj.user or self.request.user.is_staff:

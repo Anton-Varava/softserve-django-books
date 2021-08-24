@@ -4,7 +4,7 @@
     <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search book" name="book-search">
     <button class="btn btn-outline-success" type="submit">Search</button>
 </form>
-{% if book_search %}<h2>Searching for "<b>{{ book_search }}</b>"</h2>{% endif %}
+{% if search_query %}<h2>Searching for "<b>{{ search_query }}</b>"</h2>{% endif %}
 <ul>
     {% for book in books %}
     <li>
