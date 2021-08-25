@@ -45,12 +45,12 @@ class UserDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(UserDetailView, self).get_context_data(**kwargs)
-        if self.request.user.is_authenticated:
-            try:
-                author = Author.objects.get(user=self.request.user)
-            except Author.DoesNotExist:
-                author = None
-            context['author'] = author
+
+        try:
+            author = Author.objects.get(user=self.kwargs['pk'])
+        except Author.DoesNotExist:
+            author = None
+        context['author'] = author
 
         return context
 

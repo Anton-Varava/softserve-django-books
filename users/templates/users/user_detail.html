@@ -15,27 +15,30 @@
 		<p>Full name: {{user.get_full_name}}</p>
 		<p>Email: {{ user.email }}</p>
 	</div>
-    {% if request.user == user %}
+
     <div class="sidebar-section col-md-2">
         <ul class="nav flex-column">
+            {% if author %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'authors:detail-author' author.id %}">Author profile</a>
+            </li>
+            {% endif %}
+            {% if request.user == user %}
+                {% if not author %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'authors:create-author' %}">Wanna be an author</a>
+                </li>
+                {% endif %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'users:edit-user' user.id %}">Edit</a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'users:change-password' user.id %}">Change password</a>
             </li>
-            {% if author %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'authors:detail-author' author.id %}">Author profile</a>
-            </li>
-            {% else %}
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'authors:create-author' %}">Wanna be an author</a>
-            </li>
             {% endif %}
         </ul>
     </div>
-    {% endif %}
+
 </div>
 
 {% endblock %}
