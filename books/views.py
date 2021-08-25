@@ -6,6 +6,8 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
+from authors.models import Author
+
 from .models import Book, BookReview, ReviewComment
 from .forms import BookForm, ReviewCommentForm, BookReviewForm
 from .utils import IsAuthorOrStaffMixin, IsOwnerOrStaff
@@ -36,21 +38,33 @@ class BookListView(ListView):
 
 class BookDetailView(DetailView):
     context_object_name = 'book'
-    queryset = Book.objects.prefetch_related('authors')
+
+    def get_object(self, queryset=None):
+        return Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
 
     def get_context_data(self, **kwargs):
         """ Add book reviews data to context with related comments. """
         context = super(BookDetailView, self).get_context_data(**kwargs)
         context['reviews'] = BookReview.objects.filter(book=self.kwargs['pk']).select_related('user')\
             .order_by('date_added').prefetch_related('comments', 'comments__user')
+        if self.request.user.is_authenticated:
+            author = Author.objects.filter(user=self.request.user).first()
+            context['is_author'] = (True if author and author in self.object.authors.all() else False)
         return context
 
 
-class BookUpdateView(PermissionRequiredMixin, IsAuthorOrStaffMixin, UpdateView):
+class BookUpdateView(PermissionRequiredMixin, UpdateView):
     permission_required = 'books.change_book'
-    model = Book
     form_class = BookForm
     context_object_name = 'book'
+
+    def get_object(self, queryset=None):
+        book = Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
+        """ Check that user is a staff or is book author. """
+        author = Author.objects.filter(user=self.request.user).first()
+        if self.request.user.is_staff or author and author in book.authors.all():
+            return book
+        raise PermissionDenied
 
     def get_success_url(self):
         """ Return to the updated book details. """
@@ -63,14 +77,24 @@ class BookCreateView(PermissionRequiredMixin, CreateView):
     model = Book
     form_class = BookForm
 
+    def form_valid(self, form):
+        try:
+            author = Author.objects.get(user=self.request.user)
+        except Author.DoesNotExist:
+            raise PermissionDenied('You must be an author to create books.')
+        form.save()
+        form.instance.authors.add(author)
+        form.save()
+        self.object = form.save()
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
         """ Return to the created book details. """
         return reverse('books:detail-book', args=(self.object.id, ))
 
 
-class BookDeleteView(PermissionRequiredMixin, IsAuthorOrStaffMixin, DeleteView):
+class BookDeleteView(PermissionRequiredMixin, DeleteView):
     permission_required = 'books.delete_book'
-    model = Book
 
     def get_success_url(self):
         return reverse('books:list-book')
@@ -80,6 +104,14 @@ class BookDeleteView(PermissionRequiredMixin, IsAuthorOrStaffMixin, DeleteView):
         context = super(BookDeleteView, self).get_context_data(**kwargs)
         context['book'] = Book.objects.get(id=self.kwargs['pk'])
         return context
+
+    def get_object(self, queryset=None):
+        book = Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
+        """ Check that user is a staff or is book author. """
+        author = Author.objects.filter(user=self.request.user).first()
+        if self.request.user.is_staff or author and author in book.authors.all():
+            return book
+        raise PermissionDenied
 
 
 # <-------   Views for BookReview model ------>

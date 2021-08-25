@@ -6,7 +6,7 @@
     <div class="content-section col-md-10 mx-auto">
         <h2>{{ book.title }}</h2>
         <p>{% for author in book.authors.all %}<a href="{% url 'authors:detail-author' author.id %}">{{ author }}</a> {% endfor %}</p>
-        <p>{{ book.isbn13 }}</p>
+        <p>isbn13: {{ book.isbn13 }}</p>
         <div>{{ book.description | safe }}</div>
     </div>
     {% if request.user.is_staff or request.user|has_group:"Authors" %}
@@ -15,7 +15,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'books:create-book'%}">Add new book</a>
             </li>
-            {% if request.user.is_staff or book.author.user == request.user %}
+            {% if request.user.is_staff or is_author %}
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'books:edit-book' book.id %}">Edit book</a>
             </li>

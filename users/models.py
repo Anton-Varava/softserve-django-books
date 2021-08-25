@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
-
 from django.conf import settings
 
 
@@ -54,4 +53,5 @@ class User(AbstractUser):
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token
+
 

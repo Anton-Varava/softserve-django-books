@@ -24,6 +24,15 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'users:change-password' user.id %}">Change password</a>
             </li>
+            {% if author %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'authors:detail-author' author.id %}">Author profile</a>
+            </li>
+            {% else %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'authors:create-author' %}">Wanna be an author</a>
+            </li>
+            {% endif %}
         </ul>
     </div>
     {% endif %}

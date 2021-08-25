@@ -1,9 +1,9 @@
 {% for comment in review.comments.all %}
-<div class="row">
+<div class="row" xmlns="http://www.w3.org/1999/html">
     <div class="col-md-6">
     </div>
     <div class="comment-section col-md-6 ">
-        <strong>{{ comment.user.username }} {{ comment.date_added }}</strong>
+        <a href="{% url 'users:profile-user' comment.user.id %}">{{ comment.user.username }}</a> <strong>{{ comment.date_added }}</strong>
         <p>{{ comment.body|safe }}</p>
         {% if comment.user == request.user or request.user.is_staff %}
 

@@ -1,7 +1,7 @@
 {% if reviews %}
     {% for review in reviews %}
     <div class="review-section">
-        <strong>{{ review.user.username }} {{ review.date_added }}</strong>
+        <a href="{% url 'users:profile-user' review.user.id %}">{{ review.user.username }}</a><strong> {{ review.date_added }}</strong>
         <p>{{ review.body | safe }}</p>
         {% if review.user == request.user or request.user.is_staff %}
         <a href="{% url 'books:edit-review' book_id=book.id pk=review.id %}">Edit</a>
