@@ -12,7 +12,6 @@ class UserRegistrationForm(UserCreationForm):
 
 
 class UserUpdateForm(forms.ModelForm):
-    is_author = forms.BooleanField(required=False)
 
     class Meta:
         model = User

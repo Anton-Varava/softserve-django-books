@@ -6,13 +6,7 @@
     <form method="POST">
         {% csrf_token %}
         <fieldset class="form-group">
-            <legend class="border-bottom mb-4">
-                {% if book %}
-                Edit "{{ book.title }}"
-                {% else %}
-                Create book
-                {% endif %}
-            </legend>
+            <legend class="border-bottom mb-4">Create/Edit Author</legend>
             {{ form|crispy }}
         </fieldset>
         <br/>

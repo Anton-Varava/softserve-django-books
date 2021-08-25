@@ -18,7 +18,7 @@ class BookListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        query = self.request.GET.get('book-search')
+        query = self.request.GET.get('book-search', None)
         ordering = '-popularity_rank'
         if query:
             queryset = Book.objects.filter(

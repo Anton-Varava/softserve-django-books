@@ -2,16 +2,27 @@
 {% block content %}
 {% load crispy_forms_tags %}
 
-
-	<div class="row">
-		<h1>{{ user.username }} Profile</h1>
+<div class="row">
+	<div class="content-section col-md-10">
+		<h2>{{ user.username }} Profile</h2>
 		<p>Full name: {{user.get_full_name}}</p>
 		<p>Email: {{ user.email }}</p>
-		{% if request.user == user %}
-		<a class="button btn-secondary" href="{% url 'users:edit-user' user.id %}">Edit</a>
-		{% endif %}
 	</div>
-
-
+    {% if request.user == user %}
+    <div class="sidebar-section col-md-2">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'users:edit-user' user.id %}">Edit</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Change password</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Delete account</a>
+            </li>
+        </ul>
+    </div>
+    {% endif %}
+</div>
 
 {% endblock %}
