@@ -32,8 +32,11 @@ class AuthorListView(ListView):
 
 
 class AuthorDetailView(DetailView):
-    model = Author
     context_object_name = 'author'
+
+    def get_object(self, queryset=None):
+        author = Author.objects.filter(id=self.kwargs['pk']).select_related('user').first()
+        return author
 
 
 class AuthorCreateView(PermissionRequiredMixin, CreateView):
