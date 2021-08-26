@@ -2,6 +2,8 @@ import jwt
 
 from datetime import datetime, timedelta
 
+from PIL import Image
+
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
@@ -36,6 +38,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name='email address', unique=True)
+    image = models.ImageField(default='user_default.png', upload_to='profile_pics')
 
     objects = UserManager()
 
@@ -53,5 +56,15 @@ class User(AbstractUser):
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+
+        img = Image.open(self.image.path)
+
+        if img.height > 300 or img.width > 300:
+            output_size = (300, 300)
+            img.thumbnail(output_size)
+            img.save(self.image.path)
 
 
