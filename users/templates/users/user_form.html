@@ -5,6 +5,7 @@
 
 <div class="row">
     <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
         <fieldset class="form-group">
             {% if user_id %}
                 <legend class="border-bottom mb-4">Edit User</legend>

@@ -38,7 +38,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     email = models.EmailField(verbose_name='email address', unique=True)
-    image = models.ImageField(default='user_default.png', upload_to='profile_pics')
+    image = models.ImageField(default='profile_pics/user_default.png', upload_to='profile_pics')
 
     objects = UserManager()
 
