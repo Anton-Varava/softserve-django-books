@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import Group
 
 from books.utils import IsOwnerOrStaff
 from authors.models import Author
@@ -39,20 +41,19 @@ class AuthorDetailView(DetailView):
         return author
 
 
-class AuthorCreateView(PermissionRequiredMixin, CreateView):
+class AuthorCreateView(CreateView):
     model = Author
-    permission_required = 'authors.change_author'
     form_class = AuthorForm
 
-    def post(self, request, *args, **kwargs):
-        """ Add current user to form data before saving. """
-        form = AuthorForm(request.POST)
-
-        if form.is_valid():
-            form = form.save(commit=False)
-            form.user = self.request.user
-            form.save()
-        return redirect(self.get_success_url())
+    def form_valid(self, form):
+        current_user = self.request.user
+        form.instance.user = current_user
+        form.save()
+        try:
+            current_user.groups.add(Group.objects.get(name='Authors'))
+        except ObjectDoesNotExist:
+            pass
+        return super(AuthorCreateView, self).form_valid(form)
 
     def get_success_url(self):
         """ Return to the created book details. """

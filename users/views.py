@@ -4,7 +4,6 @@ from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse_lazy, reverse
 from .forms import UserRegistrationForm, UserUpdateForm
-# from django.contrib.auth.models import Group, User
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 
