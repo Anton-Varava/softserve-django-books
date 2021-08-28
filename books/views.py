@@ -189,7 +189,7 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
             form.instance.review = BookReview.objects.get(id=self.kwargs['review_id'])
             form.instance.user = self.request.user
         except ObjectDoesNotExist:
-            raise Http404('The review is not exist or has been deleted.')
+            raise Http404('The review does not exist or has been deleted.')
         return super(CommentReviewCreateView, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
@@ -218,7 +218,7 @@ class CommentDeleteView(LoginRequiredMixin, IsOwnerOrStaff, DeleteView):
             context['comment'] = ReviewComment.objects.get(id=self.kwargs['pk'])
             context['book_id'] = self.kwargs['book_id']
         except ObjectDoesNotExist:
-            raise Http404('The comment is not exist or has been deleted.')
+            raise Http404('The comment does not exist or has been deleted.')
         return context
 
     def get_success_url(self):
