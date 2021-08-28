@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from PIL import Image
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
+from django.urls import reverse
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.conf import settings
 
 
@@ -33,7 +34,8 @@ class UserManager(BaseUserManager):
         user.is_staff = True
         user.save()
 
-        return user
+        return
+
 
 
 class User(AbstractUser):
@@ -41,6 +43,10 @@ class User(AbstractUser):
     image = models.ImageField(default='profile_pics/user_default.png', upload_to='profile_pics')
 
     objects = UserManager()
+
+    def get_absolute_url(self):
+        print('im here')
+        return reverse('users:profile-user', kwargs={'pk': self.id})
 
     @property
     def token(self):
@@ -56,6 +62,8 @@ class User(AbstractUser):
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token
+
+
 
     # def save(self, *args, **kwargs):
     #     super().save(*args, **kwargs)

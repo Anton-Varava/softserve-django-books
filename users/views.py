@@ -2,9 +2,10 @@ from django.views.generic import CreateView, DetailView, UpdateView
 from django.contrib.auth.views import PasswordChangeView
 from django.contrib.auth.forms import PasswordChangeForm
 from django.urls import reverse
+from django.http import Http404
 from .forms import UserRegistrationForm, UserUpdateForm
 from django.contrib.messages.views import SuccessMessageMixin
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
 from users.models import User
 from authors.models import Author
@@ -16,9 +17,6 @@ class UserCreateView(CreateView):
     form_class = UserRegistrationForm
     template_name = 'users/user_form.html'
 
-    def get_success_url(self):
-        return reverse('users:profile-user', args=(self.object.id, ))
-
 
 class UserEditView(SuccessMessageMixin, UpdateView):
     model = User
@@ -26,15 +24,14 @@ class UserEditView(SuccessMessageMixin, UpdateView):
     template_name = 'users/user_form.html'
     success_message = 'Profile was changed successfully...'
 
-    def get_success_url(self):
-        pk = self.kwargs['pk']
-        return reverse('users:profile-user', kwargs={'pk': pk})
-
     def get_object(self, queryset=None):
-        obj = super(UserEditView, self).get_object(queryset)
+        try:
+            obj = super(UserEditView, self).get_object(queryset)
+        except ObjectDoesNotExist:
+            raise Http404('User does not exist or has been deleted.')
         if self.request.user == obj or self.request.user.is_staff:
             return obj
-        raise PermissionDenied
+        raise PermissionDenied('You don\'t have permission to edit this profile')
 
     def get_context_data(self, **kwargs):
         context = super(UserEditView, self).get_context_data(**kwargs)
