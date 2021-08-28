@@ -1,16 +1,16 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, get_object_or_404
+from django.http import Http404
 from django.urls import reverse
-from django.shortcuts import get_object_or_404
 from django.views.generic import CreateView, ListView, UpdateView, DetailView, DeleteView
 from django.db.models import Q
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 from authors.models import Author
 
 from .models import Book, BookReview, ReviewComment
 from .forms import BookForm, ReviewCommentForm, BookReviewForm
-from .utils import IsAuthorOrStaffMixin, IsOwnerOrStaff
+from .utils import IsOwnerOrStaff
 
 
 # <-------   Views for Book model ------>
@@ -20,6 +20,7 @@ class BookListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
+        """ Return a queryset of all or filtered objects. """
         query = self.request.GET.get('book-search', None)
         ordering = '-popularity_rank'
         if query:
@@ -40,10 +41,14 @@ class BookDetailView(DetailView):
     context_object_name = 'book'
 
     def get_object(self, queryset=None):
-        return Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
+        try:
+            book = Book.objects.prefetch_related('authors').get(id=self.kwargs['pk'])
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted')
+        return book
 
     def get_context_data(self, **kwargs):
-        """ Add book reviews data to context with related comments. """
+        """ Add book reviews data to a context with a related review comments. """
         context = super(BookDetailView, self).get_context_data(**kwargs)
         context['reviews'] = BookReview.objects.filter(book=self.kwargs['pk']).select_related('user')\
             .order_by('date_added').prefetch_related('comments', 'comments__user')
@@ -59,17 +64,16 @@ class BookUpdateView(PermissionRequiredMixin, UpdateView):
     context_object_name = 'book'
 
     def get_object(self, queryset=None):
-        book = Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
-        """ Check that user is a staff or is book author. """
+        try:
+            book = Book.objects.prefetch_related('authors').get(id=self.kwargs['pk'])
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted')
+
+        # Check that user is a staff or is a book author.
         author = Author.objects.filter(user=self.request.user).first()
         if self.request.user.is_staff or author and author in book.authors.all():
             return book
-        raise PermissionDenied
-
-    def get_success_url(self):
-        """ Return to the updated book details. """
-        pk = self.kwargs['pk']
-        return reverse('books:detail-book', kwargs={'pk': pk})
+        raise PermissionDenied('You don\'t have permission to edit this book ')
 
 
 class BookCreateView(PermissionRequiredMixin, CreateView):
@@ -82,15 +86,9 @@ class BookCreateView(PermissionRequiredMixin, CreateView):
             author = Author.objects.get(user=self.request.user)
         except Author.DoesNotExist:
             raise PermissionDenied('You must be an author to create books.')
-        form.save()
+        form.save()  # We need to save before adding authors
         form.instance.authors.add(author)
-        form.save()
-        self.object = form.save()
-        return redirect(self.get_success_url())
-
-    def get_success_url(self):
-        """ Return to the created book details. """
-        return reverse('books:detail-book', args=(self.object.id, ))
+        return super(BookCreateView, self).form_valid(form)
 
 
 class BookDeleteView(PermissionRequiredMixin, DeleteView):
@@ -106,12 +104,16 @@ class BookDeleteView(PermissionRequiredMixin, DeleteView):
         return context
 
     def get_object(self, queryset=None):
-        book = Book.objects.filter(id=self.kwargs['pk']).prefetch_related('authors').first()
+        try:
+            book = Book.objects.prefetch_related('authors').get(id=self.kwargs['pk'])
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted')
+
         """ Check that user is a staff or is book author. """
         author = Author.objects.filter(user=self.request.user).first()
         if self.request.user.is_staff or author and author in book.authors.all():
             return book
-        raise PermissionDenied
+        raise PermissionDenied('You don\'t have permission to delete this book ')
 
 
 # <-------   Views for BookReview model ------>
@@ -120,30 +122,23 @@ class BookReviewCreateView(PermissionRequiredMixin, CreateView):
     model = BookReview
     form_class = BookReviewForm
 
-    def post(self, request, *args, **kwargs):
+    def form_valid(self, form):
         """ Add current user and book instance to form data before saving. """
-        form = BookReviewForm(request.POST)
-        user = self.request.user
-        book = Book.objects.get(id=self.kwargs['book_id'])
-
-        if form.is_valid():
-            form = form.save(commit=False)
-            form.user = user
-            form.book = book
-            form.save()
-        return redirect(self.get_success_url())
+        try:
+            form.instance.book = Book.objects.get(id=self.kwargs['book_id'])
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted.')
+        form.instance.user = self.request.user
+        return super(BookReviewCreateView, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
         """ Add book data to context for using it in a template. """
         context = super(BookReviewCreateView, self).get_context_data(**kwargs)
-        context['book'] = Book.objects.get(id=self.kwargs['book_id'])
-
+        try:
+            context['book'] = Book.objects.get(id=self.kwargs['book_id'])
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted.')
         return context
-
-    def get_success_url(self):
-        """ Return to the book details. """
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
 
 
 class BookReviewDeleteView(PermissionRequiredMixin, IsOwnerOrStaff, DeleteView):
@@ -151,8 +146,7 @@ class BookReviewDeleteView(PermissionRequiredMixin, IsOwnerOrStaff, DeleteView):
     model = BookReview
 
     def get_success_url(self):
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
+        return self.object.get_absolute_url()
 
     def get_context_data(self, **kwargs):
         context = super(BookReviewDeleteView, self).get_context_data(**kwargs)
@@ -168,13 +162,12 @@ class BookReviewUpdateView(PermissionRequiredMixin, IsOwnerOrStaff, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(BookReviewUpdateView, self).get_context_data(**kwargs)
-        context['book'] = Book.objects.get(id=self.kwargs['book_id'])
-        context['review_id'] = self.kwargs['pk']
+        try:
+            context['book'] = Book.objects.get(id=self.kwargs['book_id'])
+            context['review_id'] = self.kwargs['pk']
+        except ObjectDoesNotExist:
+            raise Http404('The book does not exist or has been deleted')
         return context
-
-    def get_success_url(self):
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
 
 
 # <-------   Views for ReviewComment model ------>
@@ -190,26 +183,19 @@ class CommentReviewCreateView(LoginRequiredMixin, CreateView):
             initial['body'] = f'<q>{parent_comment.body}</q><br/>'
         return initial
 
-    def post(self, request, *args, **kwargs):
+    def form_valid(self, form):
         """ Add current user and review instance to form data before saving. """
-        form = ReviewCommentForm(request.POST)
-        review = BookReview.objects.get(id=self.kwargs['review_id'])
-        if form.is_valid():
-            form = form.save(commit=False)
-            form.user = self.request.user
-            form.review = review
-            form.save()
-        return redirect(self.get_success_url())
+        try:
+            form.instance.review = BookReview.objects.get(id=self.kwargs['review_id'])
+            form.instance.user = self.request.user
+        except ObjectDoesNotExist:
+            raise Http404('The review is not exist or has been deleted.')
+        return super(CommentReviewCreateView, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super(CommentReviewCreateView, self).get_context_data(**kwargs)
         context['book_id'] = self.kwargs['book_id']
-
         return context
-
-    def get_success_url(self):
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
 
 
 class CommentUpdateView(LoginRequiredMixin, IsOwnerOrStaff, UpdateView):
@@ -222,20 +208,18 @@ class CommentUpdateView(LoginRequiredMixin, IsOwnerOrStaff, UpdateView):
         context['book_id'] = self.kwargs['book_id']
         return context
 
-    def get_success_url(self):
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
-
 
 class CommentDeleteView(LoginRequiredMixin, IsOwnerOrStaff, DeleteView):
     model = ReviewComment
 
     def get_context_data(self, **kwargs):
         context = super(CommentDeleteView, self).get_context_data(**kwargs)
-        context['comment'] = ReviewComment.objects.get(id=self.kwargs['pk'])
-        context['book_id'] = self.kwargs['book_id']
+        try:
+            context['comment'] = ReviewComment.objects.get(id=self.kwargs['pk'])
+            context['book_id'] = self.kwargs['book_id']
+        except ObjectDoesNotExist:
+            raise Http404('The comment is not exist or has been deleted.')
         return context
 
     def get_success_url(self):
-        pk = self.kwargs['book_id']
-        return reverse('books:detail-book', kwargs={'pk': pk})
+        return self.object.get_absolute_url()

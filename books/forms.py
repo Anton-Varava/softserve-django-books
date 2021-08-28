@@ -1,7 +1,6 @@
 from django import forms
 
 from books.models import Book, BookReview, ReviewComment
-from authors.models import Author
 
 
 class BookForm(forms.ModelForm):

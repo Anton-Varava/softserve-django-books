@@ -1,6 +1,7 @@
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
-# from django.contrib.auth.models import User
+from django.urls import reverse
+
 from users.models import User
 from authors.models import Author
 
@@ -17,6 +18,9 @@ class Book(models.Model):
     def __str__(self):
         return f'{self.title} by {", ".join(author.__str__() for author in self.authors.all())}'
 
+    def get_absolute_url(self):
+        return reverse('books:detail-book', kwargs={'pk': self.id})
+
 
 class BookReview(models.Model):
     body = models.TextField(max_length=1000)
@@ -27,6 +31,9 @@ class BookReview(models.Model):
     def __str__(self):
         return self.body
 
+    def get_absolute_url(self):
+        return reverse('books:detail-book', kwargs={'pk': self.book.id})
+
 
 class ReviewComment(models.Model):
     body = models.TextField(max_length=1000)
@@ -36,4 +43,7 @@ class ReviewComment(models.Model):
 
     def __str__(self):
         return self.body
+
+    def get_absolute_url(self):
+        return reverse('books:detail-book', kwargs={'pk': self.review.book.id})
 
