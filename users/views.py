@@ -7,6 +7,7 @@ from .forms import UserRegistrationForm, UserUpdateForm
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 
+from books.utils import IsOwnerOrStaff
 from users.models import User
 from authors.models import Author
 
@@ -22,7 +23,7 @@ class UserEditView(SuccessMessageMixin, UpdateView):
     model = User
     form_class = UserUpdateForm
     template_name = 'users/user_form.html'
-    success_message = 'Profile was changed successfully...'
+    success_message = 'Profile was changed successfully.'
 
     def get_object(self, queryset=None):
         try:
@@ -35,7 +36,7 @@ class UserEditView(SuccessMessageMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super(UserEditView, self).get_context_data(**kwargs)
-        context['user_id'] = self.kwargs.get('pk', None)
+        context['user_id'] = self.kwargs.get('pk')
         return context
 
 
@@ -58,7 +59,7 @@ class UserDetailView(DetailView):
 class UserPasswordChangeView(SuccessMessageMixin, PasswordChangeView):
     form_class = PasswordChangeForm
     template_name = 'users/change-password.html'
-    success_message = 'Your Password was changed successfully...'
+    success_message = 'Your Password was changed successfully.'
 
     def get_success_url(self):
         pk = self.kwargs['pk']

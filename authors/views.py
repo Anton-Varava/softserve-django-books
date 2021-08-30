@@ -32,7 +32,7 @@ class AuthorListView(ListView):
 
     def get_context_data(self, *args, **kwargs):
         """ Add search_query to context for using in template. """
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(*args, **kwargs)
         context['search_query'] = self.request.GET.get('authors-search')
         return context
 
@@ -42,7 +42,7 @@ class AuthorDetailView(DetailView):
 
     def get_object(self, queryset=None):
         try:
-            author = Author.objects.select_related('user').get(id=self.kwargs['pk'])
+            author = Author.objects.select_related('user').get(id=self.kwargs.get('pk'))
         except ObjectDoesNotExist:
             raise Http404('The Author does not exist or has been deleted.')
         return author

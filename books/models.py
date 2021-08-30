@@ -16,6 +16,7 @@ class Book(models.Model):
                                                        validators=[MinValueValidator(1), MaxValueValidator(10)])
 
     def __str__(self):
+        """ Example:  '101 Reasons to Shop by Joseph Papa, Jessica Waldorf' """
         return f'{self.title} by {", ".join(author.__str__() for author in self.authors.all())}'
 
     def get_absolute_url(self):
