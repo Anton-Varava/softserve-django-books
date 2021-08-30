@@ -2,9 +2,10 @@ import jwt
 
 from datetime import datetime, timedelta
 
-from django.db import models
+from PIL import Image
 from django.urls import reverse
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.db import models
+from django.contrib.auth.models import AbstractUser, BaseUserManager, PermissionsMixin
 from django.conf import settings
 
 
@@ -13,9 +14,9 @@ class UserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **kwargs):
         """ Create and return user with username, email, password, etc """
         if not username:
-            raise TypeError('Users must have a unique username.')
+            raise TypeError('Users must have a username.')
         if not email:
-            raise TypeError('Users must have a unique email address.')
+            raise TypeError('Users must have a email address.')
         if not password:
             raise TypeError('Users must have a password.')
 
@@ -50,13 +51,11 @@ class User(AbstractUser):
 
     def _generate_jwt_token(self):
         """ Generates a JWT-token that stores users ID. The token validity period is 1 day from creation."""
-        dt = datetime.now() + timedelta(days=1)
 
         token = jwt.encode({
             'id': self.pk,
-            'exp': int(dt.strftime('%s'))
+            'exp': datetime.now() + timedelta(days=1)
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token
-
 

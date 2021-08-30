@@ -49,8 +49,10 @@ class JWTAuthentication(authentication.BaseAuthentication):
         # Python3 (HINT: использовать PyJWT). Чтобы точно решить это, нам нужно
         # декодировать prefix и token. Это не самый чистый код, но это хорошее
         # решение, потому что возможна ошибка, не сделай мы этого.
+        print(f'token - {auth_header[1]}')
         prefix = auth_header[0].decode('utf-8')
         token = auth_header[1].decode('utf-8')
+        print(f'token - {token}')
 
         if prefix.lower() != auth_header_prefix:
             # Префикс заголовка не тот, который мы ожидали - отказ.
@@ -67,8 +69,9 @@ class JWTAuthentication(authentication.BaseAuthentication):
         """
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        except Exception:
+        except Exception as e:
             msg = 'Authentication error. Unable to decode token.'
+            print(e)
             raise exceptions.AuthenticationFailed(msg)
 
         try:

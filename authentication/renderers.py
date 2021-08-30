@@ -19,4 +19,6 @@ class UserJSONRenderer(JSONRenderer):
         else:
             data['token'] = token
 
-        return json.dumps({'user': data})
+        return json.dumps({
+            'user': data
+        })
