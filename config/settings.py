@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import os
 
+import datetime
+
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -44,6 +46,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'debug_toolbar',
     'storages',
+    'django_filters',
 
     # created apps
     'books',
@@ -56,10 +59,14 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'config.exceptions.core_exception_handler',
     'NON_FIELD_ERRORS_KEY': 'error',
     'DEFAULT_AUTHENTICATION_CLASSES': (
+            # 'rest_framework_simplejwt.authentication.JWTAuthentication',
             'authentication.backends.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ]
 }
 
 MIDDLEWARE = [
@@ -187,6 +194,8 @@ AWS_QUERYSTRING_AUTH = False
 AWS_S3_FILE_OVERWRITE = False
 
 ALLOWED_HOSTS = ['18.217.199.29', '*']
+
+
 
 
 

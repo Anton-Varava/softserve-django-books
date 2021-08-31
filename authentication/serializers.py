@@ -9,18 +9,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     """ Serializing user registration and creating a new one. """
 
     password = serializers.CharField(min_length=8, max_length=128, write_only=True)
-    token = serializers.CharField(max_length=255, read_only=True)
+    # token = serializers.CharField(max_length=255, read_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'token']
+        # fields = ['email', 'username', 'password', 'token']
+        fields = ['email', 'username', 'password']
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
 
 
 class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField(max_length=255, allow_blank=True)
+    # email = serializers.EmailField(max_length=255, allow_blank=True)
     username = serializers.CharField(max_length=255)
     password = serializers.CharField(max_length=128, write_only=True)
     token = serializers.CharField(max_length=255, read_only=True)
@@ -43,7 +44,7 @@ class UserLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('This user has been deactivated')
 
         return {
-            'email': user.email,
+            # 'email': user.email,
             'username': user.username,
             'token': user.token
         }
@@ -59,7 +60,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('email', 'username', 'password', 'token', 'last_name', 'first_name')
+        # fields = ('email', 'username', 'password', 'token', 'last_name', 'first_name')
+        fields = ('email', 'username', 'password', 'last_name', 'first_name')
 
         # Параметр read_only_fields является альтернативой явному указанию поля
         # с помощью read_only = True, как мы это делали для пароля выше.
@@ -67,7 +69,7 @@ class UserSerializer(serializers.ModelSerializer):
         # состоит в том, что нам не нужно ничего указывать о поле. В поле
         # пароля требуются свойства min_length и max_length,
         # но это не относится к полю токена.
-        read_only_fields = ('token',)
+        # read_only_fields = ('token',)
 
     def update(self, instance, validated_data):
         """ Выполняет обновление User. """

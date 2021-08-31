@@ -15,3 +15,6 @@ class Author(models.Model):
 
     def get_absolute_url(self):
         return reverse('authors:detail-author', kwargs={'pk': self.id})
+
+    def get_full_name(self):
+        return f'{self.first_name} {self.last_name}'
